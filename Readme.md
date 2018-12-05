@@ -1,7 +1,7 @@
 # Личный проект «Кексобукинг» [![Build status][travis-image]][travis-url]
 
 * Студент: [Віталій Бондаренко](https://up.htmlacademy.ru/javascript/16/user/178495).
-* Наставник: `Неизвестно`.
+* Наставник: `without mentor`.
 
 ---
 
