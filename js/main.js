@@ -8,6 +8,12 @@ var CHECKOUT_TIME = ['12:00', '13:00', '14:00'];
 var FEATURES = ['wifi', 'dishwasher', 'parking', 'washer', 'elevator', 'conditioner'];
 var PHOTOS = ['http://o0.github.io/assets/images/tokyo/hotel1.jpg', 'http://o0.github.io/assets/images/tokyo/hotel2.jpg', 'http://o0.github.io/assets/images/tokyo/hotel3.jpg'];
 var PIN_SIZE = 40;
+var MAIN_PIN_SIZE = 65;
+var MAIN_PIN_LEG = 22;
+var ESC_KEYCODE = 27;
+
+
+// utils
 
 // Функция,возвращающая случайное значение из заданого интервала
 var getRandomNumber = function (min, max) {
@@ -41,6 +47,10 @@ function pushArray(array, newArray) {
     newArray.push(secondComments);
   }
 }
+
+// utils
+
+// create array
 
 var ads = [];
 
@@ -86,8 +96,8 @@ var transformType = function (type) {
   return type;
 };
 
-var userDialog = document.querySelector('.map');
-userDialog.classList.remove('map--faded');
+// create array
+
 
 var makeElement = function (tagName, className) {
   var element = document.createElement(tagName);
@@ -97,25 +107,58 @@ var makeElement = function (tagName, className) {
   return element;
 };
 
-var makePin = function (dataPin) {
-  var elementPin = makeElement('button', 'map__pin');
-  elementPin.style.left = dataPin.location.x + PIN_SIZE / 2 + 'px';
-  elementPin.style.top = dataPin.location.y + PIN_SIZE + 'px';
+var popupEscPressHandler = function (evt) {
+  if (evt.keyCode === ESC_KEYCODE) {
+    closePopup();
+  }
+};
+
+var pinClickHandler = function (item) {
+  map.appendChild(makeCard(item));
+  elementCard.classList.remove('hidden');
+  document.addEventListener('keydown', popupEscPressHandler);
+};
+
+
+var makePin = function (dataCard) {
+  var elementPin;
+  elementPin = makeElement('button', 'map__pin');
+  elementPin.style.left = dataCard.location.x + PIN_SIZE / 2 + 'px';
+  elementPin.style.top = dataCard.location.y + PIN_SIZE + 'px';
 
   var image = makeElement('img');
-  image.src = dataPin.author.avatar;
-  image.alt = dataPin.offer.title;
+  image.src = dataCard.author.avatar;
+  image.alt = dataCard.offer.title;
   image.style.width = PIN_SIZE + 'px';
   image.style.height = PIN_SIZE + 'px';
   elementPin.appendChild(image);
 
+  elementPin.addEventListener('click', function () {
+    pinClickHandler(dataCard);
+  });
+
   return elementPin;
 };
 
+
+// render pins
+
+var fragmentPin = document.createDocumentFragment();
+for (i = 0; i < ads.length; i++) {
+  fragmentPin.appendChild(makePin(ads[i]));
+}
+
+// render pins
+
+
 var mapCardTemplate = document.querySelector('template').content.querySelector('.map__card');
+var elementCard = mapCardTemplate.cloneNode(true);
+var mapFilter = document.querySelector('.map__filters-container');
+mapFilter.before(elementCard);
+elementCard.classList.add('hidden');
+
 
 var makeCard = function (dataCard) {
-  var elementCard = mapCardTemplate.cloneNode(true);
   var offer = dataCard.offer;
   elementCard.querySelector('.popup__title').textContent = offer.title;
   elementCard.querySelector('.popup__text--address').textContent = offer.address;
@@ -129,6 +172,8 @@ var makeCard = function (dataCard) {
   var elementPhotos = elementCard.querySelector('.popup__photos');
   var templatePhoto = elementCard.querySelector('.popup__photo');
   var elementPhoto = elementPhotos.removeChild(templatePhoto);
+  elementPhotos.innerHTML = '';
+
   for (var j = 0; j < offer.photos.length; j++) {
     var currentPhoto = elementPhoto.cloneNode(true);
     currentPhoto.src = offer.photos[j];
@@ -136,14 +181,101 @@ var makeCard = function (dataCard) {
   }
 
   elementCard.querySelector('.popup__avatar').src = dataCard.author.avatar;
-
   return elementCard;
 };
 
-var fragment = document.createDocumentFragment();
-for (i = 0; i < ads.length; i++) {
-  fragment.appendChild(makePin(ads[i]));
+
+// add disabled attribute to form fields when page is not active
+
+var adForm = document.querySelector('.ad-form');
+var fieldsetElements = adForm.getElementsByTagName('fieldset');
+var fieldsetElem;
+for (var k = 0; k < fieldsetElements.length; k++) {
+  fieldsetElem = fieldsetElements[k];
+  fieldsetElem.setAttribute('disabled', 'disabled');
 }
 
-fragment.appendChild(makeCard(ads[0]));
-userDialog.appendChild(fragment);
+// add disabled attribute to form fields when page is not active
+
+
+// move main pin
+
+var map = document.querySelector('.map');
+var mapPins = document.querySelector('.map__pins');
+var inputAddress = document.getElementById('address');
+var mainPin = document.querySelector('.map__pin--main');
+var currentMainPinX;
+var currentMainPinY;
+var mainPinX = Math.floor(parseInt(mainPin.style.left, 10) + MAIN_PIN_SIZE / 2);
+var mainPinY = Math.floor(parseInt(mainPin.style.top, 10) + MAIN_PIN_SIZE / 2);
+
+inputAddress.value = mainPinX + ', ' + mainPinY;
+var getActivePage = function () {
+  map.classList.remove('map--faded');
+  adForm.classList.remove('ad-form--disabled');
+  for (k = 0; k < fieldsetElements.length; k++) {
+    fieldsetElem = fieldsetElements[k];
+    fieldsetElem.removeAttribute('disabled');
+  }
+  inputAddress.value = currentMainPinX + ', ' + (currentMainPinY + MAIN_PIN_LEG);
+  mapPins.appendChild(fragmentPin);
+};
+
+
+mainPin.addEventListener('mousedown', function (evt) {
+  evt.preventDefault();
+
+  var startCoords = {
+    x: evt.clientX,
+    y: evt.clientY
+  };
+
+  var mouseMoveHandler = function (moveEvt) {
+    moveEvt.preventDefault();
+
+    var shift = {
+      x: startCoords.x - moveEvt.clientX,
+      y: startCoords.y - moveEvt.clientY
+    };
+
+    startCoords = {
+      x: moveEvt.clientX,
+      y: moveEvt.clientY
+    };
+
+    mainPin.style.top = (mainPin.offsetTop - shift.y) + 'px';
+    mainPin.style.left = (mainPin.offsetLeft - shift.x) + 'px';
+    currentMainPinX = Math.floor(parseInt(mainPin.style.left, 10) + MAIN_PIN_SIZE / 2);
+    currentMainPinY = Math.floor(parseInt(mainPin.style.top, 10) + MAIN_PIN_SIZE / 2);
+  };
+
+  var mouseUpHandler = function (upEvt) {
+    upEvt.preventDefault();
+    getActivePage();
+    document.removeEventListener('mousemove', mouseMoveHandler);
+    document.removeEventListener('mouseup', mouseUpHandler);
+  };
+
+  document.addEventListener('mousemove', mouseMoveHandler);
+  document.addEventListener('mouseup', mouseUpHandler);
+
+
+});
+
+// move main pin
+
+
+// close popup
+
+var popupClose = document.querySelector('.popup__close');
+
+var closePopup = function () {
+  elementCard.classList.add('hidden');
+  document.removeEventListener('keydown', popupEscPressHandler);
+};
+
+popupClose.addEventListener('click', function () {
+  closePopup();
+});
+
+// close popup
