@@ -6,11 +6,25 @@
   var adForm = document.querySelector('.ad-form');
   var fieldsetElements = adForm.getElementsByTagName('fieldset');
   var fieldsetElem;
-  for (var k = 0; k < fieldsetElements.length; k++) {
-    fieldsetElem = fieldsetElements[k];
-    fieldsetElem.setAttribute('disabled', 'disabled');
-  }
+
+  window.getInputDisabled = function () {
+    for (var k = 0; k < fieldsetElements.length; k++) {
+      fieldsetElem = fieldsetElements[k];
+      fieldsetElem.setAttribute('disabled', 'disabled');
+    }
+  };
+
   // add disabled attribute to form fields when page is not active
+
+
+  adForm.addEventListener('submit', function (evt) {
+    window.upload(new FormData(adForm), function () {
+      window.getDeactivePage();
+
+    });
+    evt.preventDefault();
+  });
+
 
   // synchronization fields "timein" and "timeout"
 
