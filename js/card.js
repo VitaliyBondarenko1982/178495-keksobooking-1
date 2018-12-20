@@ -3,8 +3,8 @@
 (function () {
   var mapCardTemplate = document.querySelector('template').content.querySelector('.map__card');
   window.elementCard = mapCardTemplate.cloneNode(true);
-  var mapFilter = document.querySelector('.map__filters-container');
-  mapFilter.before(window.elementCard);
+  window.mapFilter = document.querySelector('.map__filters-container');
+  window.mapFilter.before(window.elementCard);
   window.elementCard.classList.add('hidden');
 
   var transformType = function (type) {
@@ -22,7 +22,7 @@
     return type;
   };
 
-  var makeCard = function (dataCard) {
+  window.makeCard = function (dataCard) {
     var offer = dataCard.offer;
     window.elementCard.querySelector('.popup__title').textContent = offer.title;
     window.elementCard.querySelector('.popup__text--address').textContent = offer.address;
@@ -47,5 +47,5 @@
     window.elementCard.querySelector('.popup__avatar').src = dataCard.author.avatar;
     return window.elementCard;
   };
-  window.makeCard = makeCard;
+
 })();

@@ -4,95 +4,141 @@
   var ESC_KEYCODE = 27;
   var ENTER_KEYCODE = 13;
   var MAIN_PIN_LEG = 22;
-
-  window.popupEscPressHandler = function (evt) {
-    if (evt.keyCode === ESC_KEYCODE) {
-      closePopup();
-    }
-  };
-
-  window.popupEnterPressHandler = function (evt) {
-    if (evt.keyCode === ENTER_KEYCODE) {
-      closePopup();
-    }
-  };
-
-  var errorHandler = function (errorMessage) {
-    var node = document.createElement('div');
-    node.style = 'z-index: 100; margin: 0 auto; text-align: center; background-color: red;';
-    node.style.position = 'absolute';
-    node.style.left = 20;
-    node.style.right = 20;
-    node.style.fontSize = '25px';
-
-
-    node.textContent = errorMessage;
-    document.body.insertAdjacentElement('afterbegin', node);
+  var MIN_MAIN_PIN_Y = 150;
+  var MAX_MAIN_PIN_Y = 500;
+  var PHOTO = {
+    'width': 70,
+    'height': 70
   };
 
   var fragmentPin;
-  var successHandler = function () {
-    fragmentPin = document.createDocumentFragment();
-    for (var i = 0; i < window.ads.length; i++) {
-      fragmentPin.appendChild(window.makePin(window.ads[i]));
-    }
-  };
-
-  window.load(successHandler, errorHandler);
-
-  window.mapPins = document.querySelector('.map__pins');
   var inputAddress = document.getElementById('address');
   var mainPin = document.querySelector('.map__pin--main');
   var mainPinWidth = mainPin.querySelector('img').width;
   var mainPinHeight = mainPin.querySelector('img').height;
   var mapWidth = document.querySelector('.map__overlay').clientWidth;
-  var mapHeight = document.querySelector('.map__overlay').clientHeight;
-
-
-  var getActivePage = function () {
-    window.map.classList.remove('map--faded');
-    window.adForm.classList.remove('ad-form--disabled');
-    for (var k = 0; k < window.fieldsetElements.length; k++) {
-      window.fieldsetElem = window.fieldsetElements[k];
-      window.fieldsetElem.removeAttribute('disabled');
-    }
-    window.mapPins.appendChild(fragmentPin);
-  };
-
+  var fieldsetElements = window.form.adForm.querySelectorAll('.ad-form fieldset');
   var form = document.querySelector('.notice form');
-  window.getDeactivePage = function () {
-    window.map.classList.add('map--faded');
-    window.adForm.classList.add('ad-form--disabled');
-    window.getInputDisabled();
-    form.reset();
-    mainPin.style.left = pinMainPosX + 'px';
-    mainPin.style.top = pinMainPosY + 'px';
-    inputAddress.value = mainPinX + ', ' + mainPinY;
-    window.elementCard.classList.add('hidden');
+  var fileChooserAvatar = window.form.adForm.querySelector('.ad-form__field input[type=file]');
+  var previewAvatar = window.form.adForm.querySelector('.ad-form-header__preview').querySelector('img');
+  var fileChooserPhotos = window.form.adForm.querySelector('.ad-form__upload input[type=file]');
+  var previewPhotos = window.form.adForm.querySelector('.ad-form__photo');
+
+  // Event handler on avatar change
+  var onAvatarChange = function () {
+    var file = fileChooserAvatar.files[0];
+    var reader = new FileReader();
+    reader.addEventListener('load', function () {
+      previewAvatar.src = reader.result;
+    });
+    reader.readAsDataURL(file);
   };
+
+  // Event handler on property photos change
+  var onPhotosChange = function () {
+    var files = fileChooserPhotos.files;
+    [].forEach.call(files, function (el) {
+      var imgEl = document.createElement('img');
+      imgEl.width = PHOTO.width;
+      imgEl.height = PHOTO.height;
+      imgEl.alt = 'Property photo';
+      previewPhotos.appendChild(imgEl);
+      var reader = new FileReader();
+      reader.addEventListener('load', function () {
+        imgEl.src = reader.result;
+      });
+      reader.readAsDataURL(el);
+    });
+  };
+
+  fileChooserAvatar.addEventListener('change', onAvatarChange);
+  fileChooserPhotos.addEventListener('change', onPhotosChange);
+
+  window.map = {
+    renderPins: function (data, arr) {
+      var pinsArr = data.length >= arr ? arr : data.length;
+      fragmentPin = document.createDocumentFragment();
+      for (var i = 0; i < pinsArr; i++) {
+        fragmentPin.appendChild(window.pin.makePin(data[i]));
+      }
+      window.map.mapPins.appendChild(fragmentPin);
+    },
+
+    // function for deactivate page
+    getDeactivePage: function () {
+      window.pin.mapElement.classList.add('map--faded');
+      window.form.adForm.classList.add('ad-form--disabled');
+      fieldsetElements.forEach(function (item) {
+        item.setAttribute('disabled', true);
+      });
+      form.reset();
+      mainPin.addEventListener('mouseup', mainPinFirstMoveHandler);
+      var elements = document.querySelectorAll('.user__pin');
+      elements.forEach(function (node) {
+        node.parentNode.removeChild(node);
+      });
+      mainPin.style.left = mainPinPosX + 'px';
+      mainPin.style.top = mainPinPosY + 'px';
+      inputAddress.value = mainPinX + ', ' + mainPinY;
+      window.elementCard.classList.add('hidden');
+    },
+    // function for deactivate page
+
+    mapPins: document.querySelector('.map__pins')
+  };
+
+  window.ads = [];
+
+  // activate fieldsets fieldsetElements
+  var getActiveFieldsets = function () {
+    window.form.adForm.classList.remove('ad-form--disabled');
+    fieldsetElements.forEach(function (item) {
+      item.removeAttribute('disabled');
+    });
+  };
+  // activate fieldsets fieldsetElements
+
+  // function for activate page
+  var getActivePage = function () {
+    window.pin.mapElement.classList.remove('map--faded');
+    getActiveFieldsets();
+    var successLoadHandler = function (data) {
+      window.ads = data;
+      window.map.renderPins(window.ads, 5);
+    };
+    window.backend.load(successLoadHandler, window.backend.errorDataHandler);
+
+    mainPin.removeEventListener('mouseup', mainPinFirstMoveHandler);
+  };
+
+  var mainPinFirstMoveHandler = function () {
+    getActivePage();
+  };
+
+  mainPin.addEventListener('mouseup', mainPinFirstMoveHandler);
 
   // move main pin
-
   var limitMainPinMove = function (left, top) {
-    if ((left < 0) || (top < 0) || (left + mainPinWidth > mapWidth) || (top + mainPinHeight > mapHeight)) {
+    if ((left < 0) || (top < MIN_MAIN_PIN_Y - mainPinHeight - MAIN_PIN_LEG) || (left + mainPinWidth > mapWidth) || (top + mainPinHeight + MAIN_PIN_LEG > MAX_MAIN_PIN_Y)) {
       return true;
     }
     return false;
   };
 
-  var pinMainPosX = mainPin.offsetLeft;
-  var pinMainPosY = mainPin.offsetTop;
-  var mainPinX = Math.floor(pinMainPosX + mainPinWidth / 2);
-  var mainPinY = Math.floor(pinMainPosY + mainPinHeight / 2);
+  var mainPinPosX = mainPin.offsetLeft;
+  var mainPinPosY = mainPin.offsetTop;
+  var mainPinX = Math.floor(mainPinPosX + mainPinWidth / 2);
+  var mainPinY = Math.floor(mainPinPosY + mainPinHeight / 2);
   inputAddress.value = mainPinX + ', ' + mainPinY;
 
-  var setCurrentMainPinCoord = function () {
-    var currentMainPinX = Math.floor(pinMainPosX + mainPinWidth / 2);
-    var currentMainPinY = Math.floor(pinMainPosY + mainPinHeight);
-    inputAddress.value = currentMainPinX + ', ' + (currentMainPinY + MAIN_PIN_LEG);
+  window.setCurrentMainPinCoord = function () {
+    window.currentMainPinX = Math.floor(parseInt(mainPin.style.left, 10) + mainPinWidth / 2);
+    window.currentMainPinY = Math.floor(parseInt(mainPin.style.top, 10) + mainPinHeight);
+    inputAddress.value = window.currentMainPinX + ', ' + (window.currentMainPinY + MAIN_PIN_LEG);
   };
 
-  mainPin.addEventListener('mousedown', function (evt) {
+
+  var mainPinMoveHandler = function (evt) {
     evt.preventDefault();
 
     var startCoords = {
@@ -118,13 +164,13 @@
 
       mainPin.style.top = (mainPin.offsetTop - shift.y) + 'px';
       mainPin.style.left = (mainPin.offsetLeft - shift.x) + 'px';
-      setCurrentMainPinCoord();
+      window.setCurrentMainPinCoord();
     };
 
     var mouseUpHandler = function (upEvt) {
       upEvt.preventDefault();
-      getActivePage();
-      setCurrentMainPinCoord();
+      mouseMoveHandler(upEvt);
+      window.setCurrentMainPinCoord();
       document.removeEventListener('mousemove', mouseMoveHandler);
       document.removeEventListener('mouseup', mouseUpHandler);
     };
@@ -132,27 +178,46 @@
     document.addEventListener('mousemove', mouseMoveHandler);
     document.addEventListener('mouseup', mouseUpHandler);
 
-
-  });
-
+  };
+  mainPin.addEventListener('mousedown', mainPinMoveHandler);
   // move main pin
 
-
   // close popup
-
   var popupClose = document.querySelector('.popup__close');
+
+  window.popupEscPressHandler = function (evt) {
+    if (evt.keyCode === ESC_KEYCODE) {
+      closePopup();
+    }
+  };
+
+  window.popupEnterPressHandler = function (evt) {
+    if (evt.keyCode === ENTER_KEYCODE) {
+      openPopup();
+    }
+  };
 
   var closePopup = function () {
     window.elementCard.classList.add('hidden');
     document.removeEventListener('keydown', window.popupEscPressHandler);
   };
 
+  var openPopup = function () {
+    window.elementCard.classList.add('hidden');
+    document.addEventListener('keydown', window.popupEscPressHandler);
+  };
+
   popupClose.addEventListener('click', function () {
     closePopup();
   });
-
   // close popup
 
   window.fragmentPin = fragmentPin;
+  window.inputAddress = inputAddress;
+  // window.currentMainPinX = currentMainPinX;
+  // window.currentMainPinY = currentMainPinY;
+  window.MAIN_PIN_LEG = MAIN_PIN_LEG;
+  window.map.ESC_KEYCODE = ESC_KEYCODE;
+  window.map.ENTER_KEYCODE = ENTER_KEYCODE;
 
 })();
