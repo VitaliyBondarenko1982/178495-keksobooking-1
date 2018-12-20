@@ -1,6 +1,8 @@
 'use strict';
 
 (function () {
+  var PIN_SIZE = 40;
+
   var makeElement = function (tagName, className) {
     var element = document.createElement(tagName);
     if (className) {
@@ -9,35 +11,35 @@
     return element;
   };
 
-  var PIN_SIZE = 40;
-  var map = document.querySelector('.map');
-  var makePin = function (dataCard) {
-    var elementPin;
-    elementPin = makeElement('button', 'map__pin');
-    elementPin.style.left = dataCard.location.x + PIN_SIZE / 2 + 'px';
-    elementPin.style.top = dataCard.location.y + PIN_SIZE + 'px';
 
-    var image = makeElement('img');
-    image.src = dataCard.author.avatar;
-    image.alt = dataCard.offer.title;
-    image.style.width = PIN_SIZE + 'px';
-    image.style.height = PIN_SIZE + 'px';
-    elementPin.appendChild(image);
+  window.pin = {
+    mapElement: document.querySelector('.map'),
+    makePin: function (dataCard) {
+      var elementPin;
+      elementPin = makeElement('button', 'map__pin');
+      elementPin.style.left = dataCard.location.x + PIN_SIZE / 2 + 'px';
+      elementPin.style.top = dataCard.location.y + PIN_SIZE + 'px';
 
-    var pinClickHandler = function (item) {
-      map.appendChild(window.makeCard(item));
-      window.elementCard.classList.remove('hidden');
-      document.addEventListener('keydown', window.popupEscPressHandler);
-    };
+      var image = makeElement('img');
+      image.src = dataCard.author.avatar;
+      image.alt = dataCard.offer.title;
+      image.style.width = PIN_SIZE + 'px';
+      image.style.height = PIN_SIZE + 'px';
+      elementPin.classList.add('user__pin');
+      elementPin.appendChild(image);
 
-    elementPin.addEventListener('click', function () {
-      pinClickHandler(dataCard);
-      document.addEventListener('keydown', window.popupEnterPressHandler);
-    });
+      var pinClickHandler = function (item) {
+        window.pin.mapElement.appendChild(window.makeCard(item));
+        window.elementCard.classList.remove('hidden');
+        document.addEventListener('keydown', window.popupEscPressHandler);
+      };
 
-    return elementPin;
+      elementPin.addEventListener('click', function () {
+        pinClickHandler(dataCard);
+        document.addEventListener('keydown', window.popupEnterPressHandler);
+      });
+
+      return elementPin;
+    }
   };
-
-  window.makePin = makePin;
-  window.map = map;
 })();
