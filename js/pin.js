@@ -14,7 +14,7 @@
 
   window.pin = {
     mapElement: document.querySelector('.map'),
-    makePin: function (dataCard) {
+    make: function (dataCard) {
       var elementPin;
       elementPin = makeElement('button', 'map__pin');
       elementPin.style.left = dataCard.location.x + PIN_SIZE / 2 + 'px';

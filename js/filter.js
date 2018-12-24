@@ -72,7 +72,7 @@
       node.parentNode.removeChild(node);
     });
     window.elementCard.classList.add('hidden');
-    window.map.renderPins(sameAds, 5);
+    window.map.renderPins(sameAds, window.utils.NUMBER_PINS);
   };
 
   window.filterChangeHandler = function () {

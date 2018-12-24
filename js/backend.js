@@ -24,10 +24,11 @@
     'unauthorized': 'Пользователь не авторизован',
     'notFound': 'Ничего не найдено',
     'badConnection': 'Произошла ошибка соединения',
-    'timeout': 'Запрос не успел выполниться за ' + TIMEOUT + 'мс'
+    'timeout': 'Запрос не успел выполниться за ' + TIMEOUT_LOAD + 'мс'
   };
 
-  var TIMEOUT = 10000;
+  var TIMEOUT_LOAD = 10000;
+  var TIMEOUT_MESSAGE = 5000;
 
   var request;
   var error;
@@ -110,7 +111,7 @@
   var hideErrorMessage = function () {
     setTimeout(function () {
       errorElement.classList.add('hidden');
-    }, 5000);
+    }, TIMEOUT_MESSAGE);
   };
 
   window.backend.errorDataHandler = function (errorMessage) {

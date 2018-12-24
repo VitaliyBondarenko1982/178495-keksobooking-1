@@ -4,21 +4,21 @@
   var ESC_KEYCODE = 27;
   var ENTER_KEYCODE = 13;
   var MAIN_PIN_LEG = 22;
-  var MIN_MAIN_PIN_Y = 150;
-  var MAX_MAIN_PIN_Y = 500;
+  var MIN_MAIN_PIN_Y = 130;
+  var MAX_MAIN_PIN_Y = 630;
   var PHOTO = {
     'width': 70,
     'height': 70
   };
 
   var fragmentPin;
-  var inputAddress = document.getElementById('address');
-  var mainPin = document.querySelector('.map__pin--main');
+  var inputAddress = window.form.adForm.querySelector('.ad-form__element input[id=address]');
+  var mainPin = window.pin.mapElement.querySelector('.map__pin--main');
   var mainPinWidth = mainPin.querySelector('img').width;
   var mainPinHeight = mainPin.querySelector('img').height;
-  var mapWidth = document.querySelector('.map__overlay').clientWidth;
+  var mapWidth = window.pin.mapElement.querySelector('.map__overlay').clientWidth;
   var fieldsetElements = window.form.adForm.querySelectorAll('.ad-form fieldset');
-  var form = document.querySelector('.notice form');
+  // var form = document.querySelector('.notice form');
   var fileChooserAvatar = window.form.adForm.querySelector('.ad-form__field input[type=file]');
   var previewAvatar = window.form.adForm.querySelector('.ad-form-header__preview').querySelector('img');
   var fileChooserPhotos = window.form.adForm.querySelector('.ad-form__upload input[type=file]');
@@ -59,11 +59,10 @@
       var pinsArr = data.length >= arr ? arr : data.length;
       fragmentPin = document.createDocumentFragment();
       for (var i = 0; i < pinsArr; i++) {
-        fragmentPin.appendChild(window.pin.makePin(data[i]));
+        fragmentPin.appendChild(window.pin.make(data[i]));
       }
       window.map.mapPins.appendChild(fragmentPin);
     },
-
     // function for deactivate page
     getDeactivePage: function () {
       window.pin.mapElement.classList.add('map--faded');
@@ -71,7 +70,7 @@
       fieldsetElements.forEach(function (item) {
         item.setAttribute('disabled', true);
       });
-      form.reset();
+      window.form.adForm.reset();
       mainPin.addEventListener('mouseup', mainPinFirstMoveHandler);
       var elements = document.querySelectorAll('.user__pin');
       elements.forEach(function (node) {
@@ -104,7 +103,7 @@
     getActiveFieldsets();
     var successLoadHandler = function (data) {
       window.ads = data;
-      window.map.renderPins(window.ads, 5);
+      window.map.renderPins(window.ads, window.utils.NUMBER_PINS);
     };
     window.backend.load(successLoadHandler, window.backend.errorDataHandler);
 
@@ -154,7 +153,10 @@
         y: startCoords.y - moveEvt.clientY
       };
 
-      if (limitMainPinMove(mainPin.offsetLeft - shift.x, mainPin.offsetTop - shift.y)) {
+      var coordX = mainPin.offsetLeft - shift.x;
+      var coordY = mainPin.offsetTop - shift.y;
+
+      if (limitMainPinMove(coordX, coordY)) {
         return;
       }
       startCoords = {
@@ -162,8 +164,8 @@
         y: moveEvt.clientY
       };
 
-      mainPin.style.top = (mainPin.offsetTop - shift.y) + 'px';
-      mainPin.style.left = (mainPin.offsetLeft - shift.x) + 'px';
+      mainPin.style.top = coordY + 'px';
+      mainPin.style.left = coordX + 'px';
       window.setCurrentMainPinCoord();
     };
 
@@ -184,7 +186,6 @@
 
   // close popup
   var popupClose = document.querySelector('.popup__close');
-
   window.popupEscPressHandler = function (evt) {
     if (evt.keyCode === ESC_KEYCODE) {
       closePopup();
@@ -214,8 +215,6 @@
 
   window.fragmentPin = fragmentPin;
   window.inputAddress = inputAddress;
-  // window.currentMainPinX = currentMainPinX;
-  // window.currentMainPinY = currentMainPinY;
   window.MAIN_PIN_LEG = MAIN_PIN_LEG;
   window.map.ESC_KEYCODE = ESC_KEYCODE;
   window.map.ENTER_KEYCODE = ENTER_KEYCODE;

@@ -5,6 +5,7 @@
   var lastTimeout;
 
   window.utils = {
+    NUMBER_PINS: 5,
     DEBOUNCE_INTERVAL: 500,
 
     debounce: function (fun) {
@@ -28,9 +29,19 @@
         action();
       }
     },
+
     removeElement: function (element) {
       element.remove();
       return element;
+    },
+
+    hideElementDisplayNone: function (element) {
+      element.style.display = 'none';
+      return element;
+    },
+
+    checkArrayContainsElement: function (array, elementToFind) {
+      return array.includes(elementToFind);
     }
   };
 })();

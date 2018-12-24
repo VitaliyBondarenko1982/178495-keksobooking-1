@@ -44,7 +44,7 @@
   // synchronization fields "tipe" and "price"
   var selectType = window.form.adForm.querySelector('#type');
   var selectPrice = window.form.adForm.querySelector('#price');
-  selectPrice.placeholder = '0';
+  selectPrice.setAttribute('placeholder', 1000);
   selectType.children[0].removeAttribute('selected');
   selectType.children[1].setAttribute('selected', 'selected');
   var changeMinPrice = function (minPrice) {
@@ -71,6 +71,7 @@
   // synchronization fields "room number" and "capacity"
   var adFormRooms = window.form.adForm.elements.rooms;
   var adFormCapacity = window.form.adForm.elements.capacity;
+  adFormCapacity.children[2].setAttribute('selected', 'selected');
 
   var syncRoomAndCapacity = function () {
     var selectRoom = parseInt(adFormRooms.value, 10);
